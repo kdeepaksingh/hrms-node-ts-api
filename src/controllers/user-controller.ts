@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import userModel from "../models/userModel";
+import crypto from "crypto";
+import nodemailer from "nodemailer";
 import bcrypt from "bcryptjs";
 
 const JWT_SECRET = process.env.JWT_SECRET as string | undefined;
@@ -90,7 +92,61 @@ const loginUser = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+
+    const user = await userModel.findOne({ email });
+
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    // Generate reset token and expiration
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
+
+    user.verificationCode = resetToken; // reuse or create a new field like resetToken
+    await user.save();
+
+    // Send email (mock for now)
+    console.log(
+      `Reset Link: http://localhost:3000/reset-password/${resetToken}`
+    );
+
+    res.status(200).json({ message: "Password reset link sent to email" });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const resetPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { token } = req.params;
+    const { newPassword } = req.body;
+
+    const user = await userModel.findOne({ verificationCode: token });
+
+    if (!user) {
+      res.status(400).json({ message: "Invalid or expired reset token" });
+      return;
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    user.verificationCode = ""; // clear token
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successfully" });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const userController = {
   registerUser,
   loginUser,
+  forgotPassword,
+  resetPassword,
 };
