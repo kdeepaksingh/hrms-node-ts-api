@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import userModel from "../models/userModel";
 import crypto from "crypto";
-import nodemailer from "nodemailer";
+import { sendResetEmail } from "../utils/sendEmail";
 import bcrypt from "bcryptjs";
 
 const JWT_SECRET = process.env.JWT_SECRET as string | undefined;
@@ -92,32 +92,33 @@ const loginUser = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email } = req.body;
 
     const user = await userModel.findOne({ email });
-
     if (!user) {
       res.status(404).json({ message: "User not found" });
       return;
     }
 
-    // Generate reset token and expiration
+    // Generate token and hash it
     const resetToken = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
     const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
 
-    user.verificationCode = resetToken; // reuse or create a new field like resetToken
+    // Save hashed token & expiry to user
+    user.resetToken = tokenHash;
+    user.resetTokenExpiry = resetTokenExpiry;
     await user.save();
 
-    // Send email (mock for now)
-    console.log(
-      `Reset Link: http://localhost:3000/reset-password/${resetToken}`
-    );
+    // Send email with plain token
+    await sendResetEmail(user.email, resetToken);
 
-    res.status(200).json({ message: "Password reset link sent to email" });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(200).json({ message: "Reset link sent to your email." });
+  } catch (err: any) {
+    console.error("Forgot password error:", err);
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -125,20 +126,25 @@ const resetPassword = async (req: Request, res: Response): Promise<void> => {
   try {
     const { token } = req.params;
     const { newPassword } = req.body;
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
-    const user = await userModel.findOne({ verificationCode: token });
+    const user = await userModel.findOne({
+      resetToken: tokenHash,
+      resetTokenExpiry: { $gt: new Date() },
+    });
 
     if (!user) {
-      res.status(400).json({ message: "Invalid or expired reset token" });
+      res.status(400).json({ message: "Invalid or expired token." });
       return;
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
-    user.verificationCode = ""; // clear token
+    user.resetToken = undefined;
+    user.resetTokenExpiry = undefined;
     await user.save();
 
-    res.status(200).json({ message: "Password reset successfully" });
+    res.status(200).json({ message: "Password reset successfully." });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

@@ -3,6 +3,8 @@ export interface IUser {
   email: string;
   mobileNo: string;
   password?: string;
+  resetToken?: string;
+  resetTokenExpiry?: Date;
   verificationCode: string;
   role?: "user" | "admin";
 }

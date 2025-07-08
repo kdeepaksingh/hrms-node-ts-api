@@ -25,6 +25,12 @@ export const userSchema = new Schema<IUserModel>(
       type: String,
       required: true,
     },
+    resetToken: {
+      type: String,
+    },
+    resetTokenExpiry: {
+      type: Date,
+    },
     role: {
       type: String,
       enum: ["user", "admin"],
