@@ -3,9 +3,13 @@ import jwt from "jsonwebtoken";
 import userModel from "../models/userModel";
 import crypto from "crypto";
 import { sendResetEmail } from "../utils/sendEmail";
+import { sendEmailOTP } from "../utils/sendEmailOTP";
 import bcrypt from "bcryptjs";
 
 const JWT_SECRET = process.env.JWT_SECRET as string | undefined;
+const OTP_EXPIRY_MINUTES = 10;
+const emailOtpStore: { [email: string]: { otp: string; expiresAt: number } } =
+  {};
 
 if (!JWT_SECRET) {
   throw new Error("JWT_SECRET is not defined in environment variables.");
@@ -92,7 +96,10 @@ const loginUser = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+export const forgotPassword = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { email } = req.body;
 
@@ -104,7 +111,10 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
 
     // Generate token and hash it
     const resetToken = crypto.randomBytes(32).toString("hex");
-    const tokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
     const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
 
     // Save hashed token & expiry to user
@@ -150,9 +160,67 @@ const resetPassword = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+const sendEmailOtp = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, employeeName } = req.body;
+
+    if (!email) {
+      res.status(400).json({ message: "Email is required" });
+      return;
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    await sendEmailOTP(email, otp, employeeName);
+
+    // Store OTP with expiry timestamp
+    const expiresAt = Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000;
+    emailOtpStore[email] = { otp, expiresAt };
+
+    res.status(200).json({ message: "OTP sent successfully" });
+  } catch (error) {
+    console.error("Error sending OTP:", error);
+    res.status(500).json({ message: "Failed to send OTP" });
+  }
+};
+
+const verifyEmailOtp = (req: Request, res: Response): void => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    res.status(400).json({ message: "Email and OTP are required" });
+    return;
+  }
+
+  const storedData = emailOtpStore[email];
+
+  if (!storedData) {
+    res.status(400).json({ message: "No OTP sent for this email" });
+    return;
+  }
+
+  if (Date.now() > storedData.expiresAt) {
+    delete emailOtpStore[email];
+    res.status(400).json({ message: "OTP expired" });
+    return;
+  }
+
+  if (storedData.otp !== otp) {
+    res.status(400).json({ message: "Invalid OTP" });
+    return;
+  }
+
+  // Success: Remove OTP after verification
+  delete emailOtpStore[email];
+
+  res.status(200).json({ message: "Email verified successfully" });
+};
+
 export const userController = {
   registerUser,
   loginUser,
   forgotPassword,
   resetPassword,
+  sendEmailOtp,
+  verifyEmailOtp,
 };
