@@ -56,14 +56,29 @@ export const createEmployee = async (
       address,
     } = req.body;
 
+    const baseUrl = `${req.protocol}://${req.get("host")}`; // e.g., http://localhost:8000
+
     const profilePhotoUrl =
       req.files && (req.files as any).profilePhoto
-        ? (req.files as any).profilePhoto[0].path
+        ? `${baseUrl}/${(req.files as any).profilePhoto[0].path.replace(
+            /\\/g,
+            "/"
+          )}`
         : undefined;
+
     const resumeUrl =
       req.files && (req.files as any).resume
-        ? (req.files as any).resume[0].path
+        ? `${baseUrl}/${(req.files as any).resume[0].path.replace(/\\/g, "/")}`
         : undefined;
+
+    // const profilePhotoUrl =
+    //   req.files && (req.files as any).profilePhoto
+    //     ? (req.files as any).profilePhoto[0].path
+    //     : undefined;
+    // const resumeUrl =
+    //   req.files && (req.files as any).resume
+    //     ? (req.files as any).resume[0].path
+    //     : undefined;
 
     const employee = new Employee({
       firstName,

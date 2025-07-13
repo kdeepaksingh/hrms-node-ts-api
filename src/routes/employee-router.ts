@@ -11,7 +11,7 @@ const uploadFields = upload.fields([
   { name: "resume", maxCount: 1 },
 ]);
 
-employeeRouter.route("/lists").get(employeeCtrl.getEmployees);
+employeeRouter.route("/employees/list").get(employeeCtrl.getEmployees);
 employeeRouter.route("/list/:id").get(employeeCtrl.getEmployeeById);
 employeeRouter
   .route("/employees/add")
