@@ -12,14 +12,18 @@ const uploadFields = upload.fields([
 ]);
 
 employeeRouter.route("/employees/list").get(employeeCtrl.getEmployees);
-employeeRouter.route("/list/:id").get(employeeCtrl.getEmployeeById);
+employeeRouter.route("//employeeslist/:id").get(employeeCtrl.getEmployeeById);
 employeeRouter
   .route("/employees/add")
   .post(uploadFields, employeeCtrl.createEmployee);
 employeeRouter
-  .route("/update/:id")
+  .route("/employees/update/:id")
   .put(uploadFields, employeeCtrl.updateEmployee);
-employeeRouter.route("/delete/:id").delete(employeeCtrl.deleteEmployee);
-employeeRouter.route("/download/pdf/:id").get(employeeCtrl.downloadEmployeePDF);
+employeeRouter
+  .route("/employees/delete/:id")
+  .delete(employeeCtrl.deleteEmployee);
+employeeRouter
+  .route("/employees/download/pdf/:id")
+  .get(employeeCtrl.downloadEmployeePDF);
 
 export default employeeRouter;
