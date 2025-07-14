@@ -8,6 +8,7 @@ import userRouter from "./routes/user-router";
 import appLoger from "./middlewares/appLogger";
 import { setupSwagger } from "./config/swagger";
 import employeeRouter from "./routes/employee-router";
+import leaveRouter from "./routes/leave-router";
 
 // Connect to MongoDB
 connectDB();
@@ -34,6 +35,7 @@ app.use(morgan("dev")); // it is used for logging, its a third party library mid
 // Routes Adding below
 app.use("/auth/api", userRouter);
 app.use("/api", employeeRouter);
+app.use("/api", leaveRouter);
 
 app.listen(port, hostName, () => {
   console.log(`Server running at http://${hostName}:${port}`);
