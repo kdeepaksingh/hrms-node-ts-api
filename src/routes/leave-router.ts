@@ -10,7 +10,7 @@ leaveRouter.route("/leaves/list").get(leaveCtrl.getAllLeaves);
 leaveRouter.route("/leave/list/:employeeId").get(leaveCtrl.getLeavesByEmployee);
 leaveRouter.route("/leave/add").post(uploadFields, leaveCtrl.createLeave);
 leaveRouter
-  .route("/leave/update/:id/status")
+  .route("/leave/update/:id/:status")
   .put(uploadFields, leaveCtrl.updateLeaveStatus);
 leaveRouter.route("/leave/delete/:id").delete(leaveCtrl.cancelLeave);
 

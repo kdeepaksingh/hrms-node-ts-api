@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { LeaveModel } from "../models/leaveModel";
+import { buildQuery, getPagination } from "../utils/queryFeatures";
 
 export const createLeave = async (
   req: Request,
@@ -75,6 +76,22 @@ export const getAllLeaves = async (
   }
 };
 
+export const postLeave = async (req: Request, res: Response) => {
+  const leave = new LeaveModel({
+    ...req.body,
+    userId: (req as any).user.userId,
+  });
+  await leave.save();
+  res.status(201).json(leave);
+};
+
+export const getLeaves = async (req: Request, res: Response) => {
+  const query = buildQuery(req.query, ["leaveType", "reason"]);
+  const { skip, limit } = getPagination(req.query);
+  const leaves = await LeaveModel.find(query).skip(skip).limit(limit);
+  res.json(leaves);
+};
+
 export const getLeavesByEmployee = async (
   req: Request,
   res: Response
@@ -99,11 +116,10 @@ export const updateLeaveStatus = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { id } = req.params;
-    const { status } = req.body;
+    const { id, status } = req.params;
 
     const validStatuses = ["approved", "rejected"];
-    if (!validStatuses.includes(status)) {
+    if (!validStatuses.includes(status.toLowerCase())) {
       res
         .status(400)
         .json({ status: "fail", message: "Invalid status value." });
@@ -112,9 +128,10 @@ export const updateLeaveStatus = async (
 
     const leave = await LeaveModel.findByIdAndUpdate(
       id,
-      { status },
+      { status: status.toLowerCase() },
       { new: true }
     );
+
     if (!leave) {
       res.status(404).json({ status: "fail", message: "Leave not found." });
       return;

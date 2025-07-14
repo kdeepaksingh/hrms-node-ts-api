@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 export interface ILeave extends mongoose.Document {
+  userId: { type: mongoose.Schema.Types.ObjectId; ref: "User" };
   employeeId: string;
   leaveType: "casual" | "sick" | "earned" | "short" | "breavement" | "compoff";
   dayType: "full" | "half";
