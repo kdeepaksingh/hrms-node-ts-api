@@ -58,6 +58,74 @@ export const createLeave = async (
   }
 };
 
+export const getLeaveSummary = async (req: Request, res: Response) => {
+  try {
+    const today = new Date().toISOString().split("T")[0];
+    const startOfMonth = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth(),
+      1
+    );
+
+    const totalToday = await LeaveModel.countDocuments({
+      fromDate: { $lte: today },
+      toDate: { $gte: today },
+    });
+
+    const totalRequest = await LeaveModel.countDocuments(); // All leave records
+    const totalApproved = await LeaveModel.countDocuments({
+      status: "approved",
+    });
+    const totalPending = await LeaveModel.countDocuments({ status: "pending" });
+    const totalRejected = await LeaveModel.countDocuments({
+      status: "rejected",
+    });
+
+    const thisMonth = await LeaveModel.countDocuments({
+      fromDate: { $gte: startOfMonth },
+    });
+
+    // Group by leaveType
+    const leaveTypeSummary = await LeaveModel.aggregate([
+      {
+        $group: {
+          _id: "$leaveType",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Convert to object for easy access
+    const leaveTypeCounts = leaveTypeSummary.reduce((acc, curr) => {
+      acc[curr._id] = curr.count;
+      return acc;
+    }, {} as Record<string, number>);
+
+    res.json({
+      totalToday,
+      totalRequest,
+      totalApproved,
+      totalPending,
+      totalRejected,
+      thisMonth,
+      leaveTypes: {
+        casualLeave: leaveTypeCounts["casual"] || 0,
+        earnedLeave: leaveTypeCounts["earned"] || 0,
+        sickLeave: leaveTypeCounts["sick"] || 0,
+        shortLeave: leaveTypeCounts["short"] || 0,
+        breavementLeave: leaveTypeCounts["breavement"] || 0,
+        compoffLeave: leaveTypeCounts["compoff"] || 0,
+      },
+    });
+  } catch (error) {
+    console.error("Error in getLeaveSummary:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to fetch leave summary",
+    });
+  }
+};
+
 export const getAllLeaves = async (
   _req: Request,
   res: Response
