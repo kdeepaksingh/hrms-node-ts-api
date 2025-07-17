@@ -3,12 +3,16 @@ import mongoose from "mongoose";
 export interface IAttendance extends mongoose.Document {
   employeeId: string;
   employeeName: string;
-  date: string; // Format: YYYY-MM-DD
-  inTime?: string;
-  outTime?: string;
-  status: "present" | "absent" | "leave" | "wfh" | "half day";
+  attendanceDate: Date;
   attendanceType: "office" | "remote" | "field";
-  remarks?: string;
+  department: string;
+  designation: string;
+  gender: string;
+  inTime?: string | null;
+  outTime?: string | null;
+  reason?: string;
+  status: string;
+  attachment?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,9 +21,7 @@ const AttendanceSchema = new mongoose.Schema<IAttendance>(
   {
     employeeId: { type: String, required: true },
     employeeName: { type: String, required: true },
-    date: { type: String, required: true },
-    inTime: String,
-    outTime: String,
+    attendanceDate: { type: Date, required: true },
     status: {
       type: String,
       enum: ["present", "absent", "leave", "wfh", "half day"],
@@ -30,7 +32,13 @@ const AttendanceSchema = new mongoose.Schema<IAttendance>(
       enum: ["office", "remote", "field"],
       required: true,
     },
-    remarks: String,
+    department: { type: String, required: true },
+    designation: { type: String, required: true },
+    gender: { type: String, required: true },
+    inTime: { type: String, default: null },
+    outTime: { type: String, default: null },
+    reason: { type: String, default: "" },
+    attachment: { type: String, default: "" },
   },
   { timestamps: true }
 );
