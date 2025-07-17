@@ -6,7 +6,7 @@ export interface IAttendance extends mongoose.Document {
   date: string; // Format: YYYY-MM-DD
   inTime?: string;
   outTime?: string;
-  status: "present" | "absent" | "leave";
+  status: "present" | "absent" | "leave" | "wfh" | "half day";
   attendanceType: "office" | "remote" | "field";
   remarks?: string;
   createdAt: Date;
@@ -22,7 +22,7 @@ const AttendanceSchema = new mongoose.Schema<IAttendance>(
     outTime: String,
     status: {
       type: String,
-      enum: ["present", "absent", "leave"],
+      enum: ["present", "absent", "leave", "wfh", "half day"],
       required: true,
     },
     attendanceType: {
