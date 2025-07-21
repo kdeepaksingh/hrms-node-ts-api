@@ -8,10 +8,10 @@ export interface IAttendance extends mongoose.Document {
   department: string;
   designation: string;
   gender: string;
-  inTime?: string | null;
-  outTime?: string | null;
+  inTime?: Date | null;
+  outTime?: Date | null;
   reason?: string;
-  status: string;
+  status: "present" | "absent" | "leave" | "wfh" | "half day" | "late";
   attachment?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -24,7 +24,7 @@ const AttendanceSchema = new mongoose.Schema<IAttendance>(
     attendanceDate: { type: Date, required: true },
     status: {
       type: String,
-      enum: ["present", "absent", "leave", "wfh", "half day"],
+      enum: ["present", "absent", "leave", "wfh", "half day", "late"],
       required: true,
     },
     attendanceType: {
