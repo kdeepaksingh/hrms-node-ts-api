@@ -10,6 +10,7 @@ import { setupSwagger } from "./config/swagger";
 import employeeRouter from "./routes/employee-router";
 import leaveRouter from "./routes/leave-router";
 import attendanceRouter from "./routes/attendance-router";
+import feedbackRouter from "./routes/feedback-router";
 
 // Connect to MongoDB
 connectDB();
@@ -38,6 +39,7 @@ app.use("/auth/api", userRouter);
 app.use("/api", employeeRouter);
 app.use("/api", leaveRouter);
 app.use("/api", attendanceRouter);
+app.use("/api", feedbackRouter);
 
 app.listen(port, hostName, () => {
   console.log(`Server running at http://${hostName}:${port}`);
