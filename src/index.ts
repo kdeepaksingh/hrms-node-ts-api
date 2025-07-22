@@ -11,6 +11,7 @@ import employeeRouter from "./routes/employee-router";
 import leaveRouter from "./routes/leave-router";
 import attendanceRouter from "./routes/attendance-router";
 import feedbackRouter from "./routes/feedback-router";
+import contactRouter from "./routes/contact-router";
 
 // Connect to MongoDB
 connectDB();
@@ -40,6 +41,7 @@ app.use("/api", employeeRouter);
 app.use("/api", leaveRouter);
 app.use("/api", attendanceRouter);
 app.use("/api", feedbackRouter);
+app.use("/api", contactRouter);
 
 app.listen(port, hostName, () => {
   console.log(`Server running at http://${hostName}:${port}`);
