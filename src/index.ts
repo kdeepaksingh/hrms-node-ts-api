@@ -29,6 +29,17 @@ const port: number = Number(process.env.PORT) || 5000;
 
 // Middleware to parse JSON request bodies
 app.use(cors()); // it is used for enabling CORS (Cross-Origin Resource Sharing) for cross-origin requests
+// Allow all origins (for development)
+// app.use(cors());
+
+// OR allow specific origin (more secure)
+// app.use(
+//   cors({
+//     origin: "http://localhost:5174", // your frontend URL
+//     methods: ["GET", "POST", "PUT", "DELETE"],
+//     credentials: true, // if you're using cookies or auth headers
+//   })
+// );
 app.use(express.json()); // it is used for parsing JSON request bodies from express
 app.use(express.urlencoded({ extended: true })); // it is used for parsing JSON request bodies from express
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
